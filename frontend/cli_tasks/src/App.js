@@ -8,12 +8,11 @@ class App extends Component {
     super(props);
     this.props = props;
     this.state = {
-      username: "guest"
+      username: "guest",
     };
   }
 
   commandParse(cmd, print) {
-    console.log("received command " + cmd)
     axios.post('http://0.0.0.0:8001/execute', {
         cmd: cmd,
         username: this.state["username"]

@@ -5,6 +5,21 @@ import json
 app = Flask(__name__)
 CORS(app)
 
+def check_login(username):
+    return True
+
+@app.route('/login', methods=['POST'])
+def login():
+    if request.method != "POST":
+        return json.dumps({"login": "Only POST is supported"})
+    data = request.get_json(force=True)
+    username = data["username"]
+
+    if not check_login(username):
+        return json.dumps({"login": "failed"})
+
+    return json.dumps({"login": "success"})
+
 @app.route('/execute', methods=['POST'])
 def execute():
     if request.method != "POST":
