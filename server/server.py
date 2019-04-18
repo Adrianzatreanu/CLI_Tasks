@@ -8,7 +8,9 @@ app = Flask(__name__)
 CORS(app)
 
 def check_login(username):
-    return True
+    if username == "adizatreanu":
+        return True
+    return False
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -20,11 +22,39 @@ def login():
     if sanity_check_result != SanityChecker.OK:
         return json.dumps({"login": sanity_check_result})
 
-    username = data["username"]
+    username = data["username"][0]
     if not check_login(username):
         return json.dumps({"login": "failed"})
 
     return json.dumps({"login": "success"})
+
+@app.route('/list_topics', methods=['GET'])
+def list_topics():
+    if request.method != "GET":
+        return json.dumps({"list_topics": "Only GET is supported"})
+
+    # mock data
+    topics = ["Processes", "Filesystem", "Networking"]
+
+    return json.dumps({"list_topics": topics})
+
+@app.route('/list_tasks', methods=['POST'])
+def list_tasks():
+    if request.method != "POST":
+        return json.dumps({"list_tasks": "Only POST is supported"})
+
+    data = request.get_json(force=True)
+
+    sanity_check_result = SanityChecker.perform_list_tasks_sanity_checks(data)
+    if sanity_check_result != SanityChecker.OK:
+        return json.dumps({"list_tasks": sanity_check_result})
+
+    topic = data["topic"]
+
+    # mock data
+    tasks = ["Task1", "Task2", "Task3"]
+
+    return json.dumps({"list_tasks": tasks})
 
 @app.route('/execute', methods=['POST'])
 def execute():

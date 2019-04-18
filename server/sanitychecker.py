@@ -27,3 +27,14 @@ class SanityChecker:
         if res == "":
             return SanityChecker.OK
         return res
+
+    @staticmethod
+    def perform_list_tasks_sanity_checks(data):
+        res = ""
+
+        if "topic" not in data:
+            res += "topic missing."
+
+        if res == "":
+            return SanityChecker.OK
+        return res
