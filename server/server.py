@@ -52,7 +52,7 @@ def list_tasks():
     topic = data["topic"]
 
     # mock data
-    tasks = ["Task1", "Task2", "Task3"]
+    tasks = ["Task1 (best: 80p)", "Task2 (best: 63p)", "Task3"]
 
     return json.dumps({"list_tasks": tasks})
 
