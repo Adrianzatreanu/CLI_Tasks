@@ -3,6 +3,7 @@ from flask_cors import CORS
 import json
 
 from sanitychecker import SanityChecker
+from dbhandler import DbHandler
 
 app = Flask(__name__)
 CORS(app)
@@ -34,7 +35,7 @@ def list_topics():
         return json.dumps({"list_topics": "Only GET is supported"})
 
     # mock data
-    topics = ["Processes", "Filesystem", "Networking"]
+    topics = DbHandler.list_topics()
 
     return json.dumps({"list_topics": topics})
 

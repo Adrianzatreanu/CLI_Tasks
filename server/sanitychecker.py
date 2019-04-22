@@ -1,5 +1,3 @@
-import sys
-
 class SanityChecker:
     OK = 0
 
