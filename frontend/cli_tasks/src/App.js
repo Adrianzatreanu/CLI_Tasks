@@ -78,6 +78,7 @@ class App extends Component {
 
     if (!this.topic_selected()) {
       print("Select a topic first.");
+      return;
     }
 
     axios.post('http://0.0.0.0:8001/list_tasks', {
