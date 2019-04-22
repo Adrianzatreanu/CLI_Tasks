@@ -3,6 +3,8 @@ import './App.css';
 import axios from 'axios';
 import Terminal from 'terminal-in-react';
 
+const server_addr = "http://0.0.0.0:8001";
+
 class App extends Component {
   constructor (props) {
     super(props);
@@ -11,12 +13,12 @@ class App extends Component {
       username: "guest",
       msg: "Welcome to CLI Tasks. Please enter your username, or `help` to show a list of helpful commands.",
       topic: "none",
-      task: "none"
+      task: "none",
     };
   }
 
   login(cmd, print) {
-    axios.post('http://0.0.0.0:8001/login', {
+    axios.post(server_addr + "/login", {
         username: cmd
       })
       .then(response => {
@@ -37,7 +39,7 @@ class App extends Component {
   }
 
   commandParse(cmd, print) {
-    axios.post('http://0.0.0.0:8001/execute', {
+    axios.post(server_addr + "/execute", {
         cmd: cmd,
         username: this.state["username"]
       })
@@ -56,7 +58,7 @@ class App extends Component {
       return;
     }
     console.log("list_topics called");
-    axios.get('http://0.0.0.0:8001/list_topics')
+    axios.get(server_addr + "/list_topics")
       .then(function (response) {
         console.log(response);
         var topics = response["data"]["list_topics"];
@@ -81,7 +83,7 @@ class App extends Component {
       return;
     }
 
-    axios.post('http://0.0.0.0:8001/list_tasks', {
+    axios.post(server_addr + "/list_tasks", {
         topic: this.state["topic"]
       })
       .then(response => {
@@ -109,7 +111,7 @@ class App extends Component {
     var topic = cmd_args[0];
     console.log("change_topic called with topic " + topic);
 
-    axios.get('http://0.0.0.0:8001/list_topics')
+    axios.get(server_addr + "/list_topics")
       .then(response => {
         console.log(response);
         var topics = response["data"]["list_topics"];
