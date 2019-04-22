@@ -9,9 +9,9 @@ app = Flask(__name__)
 CORS(app)
 
 def check_login(username):
-    if username == "adizatreanu":
-        return True
-    return False
+    # currently only checks for the username.
+    # should actually use an authentication service
+    return DbHandler.username_exists(username)
 
 @app.route('/login', methods=['POST'])
 def login():

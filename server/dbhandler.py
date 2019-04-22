@@ -18,3 +18,13 @@ class DbHandler:
                 topics.append(row[0])
 
             return topics
+
+    @staticmethod
+    def username_exists(username):
+        with sqlite3.connect(PATH_TO_DB) as conn:
+            cursor = conn.cursor()
+            instruction = "select id from users where username='{}'".format(username)
+            cursor.execute(instruction)
+            row = cursor.fetchone()
+
+            return row is not None
