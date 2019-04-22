@@ -50,6 +50,8 @@ Entry:
 `added_by`            - text, optional, a name or any string to represent who added it
 `checker_name`        - text. The name of the checker file, including extension
 `checker_language_id` - int. Taken from the checker languages table.
+`description`         - text. The description of the task. Shown when the task
+                      - is started.
 
 # Topic tasks
 
