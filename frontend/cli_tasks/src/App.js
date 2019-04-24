@@ -26,7 +26,7 @@ class App extends Component {
         if (response["data"]["login"] === "success") {
           print("Login successful.")
           this.setState({
-            username: cmd,
+            username: cmd[0],
             msg: "Type `help` to show a list of helpful commands."
           });
         } else {
@@ -84,7 +84,8 @@ class App extends Component {
     }
 
     axios.post(server_addr + "/list_tasks", {
-        topic: this.state["topic"]
+        topic: this.state["topic"],
+        username: this.state["username"]
       })
       .then(response => {
         console.log(response);

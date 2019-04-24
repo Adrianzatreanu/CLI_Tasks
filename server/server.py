@@ -34,7 +34,6 @@ def list_topics():
     if request.method != "GET":
         return json.dumps({"list_topics": "Only GET is supported"})
 
-    # mock data
     topics = DbHandler.list_topics()
 
     return json.dumps({"list_topics": topics})
@@ -51,9 +50,9 @@ def list_tasks():
         return json.dumps({"list_tasks": sanity_check_result})
 
     topic = data["topic"]
+    username = data["username"]
 
-    # mock data
-    tasks = ["Task1 (best: 80p)", "Task2 (best: 63p)", "Task3"]
+    tasks = DbHandler.get_tasks_and_scores(topic, username)
 
     return json.dumps({"list_tasks": tasks})
 

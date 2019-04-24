@@ -32,6 +32,8 @@ class SanityChecker:
 
         if "topic" not in data:
             res += "topic missing."
+        if "username" not in data:
+            res += "username missing."
 
         if res == "":
             return SanityChecker.OK
