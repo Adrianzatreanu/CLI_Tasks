@@ -138,11 +138,27 @@ class App extends Component {
     }
 
     var cmd_args = args["_"];
-    if (cmd_args.length !== 2) {
-      print("Invalid usage. start_task <task_name>");
+    if (cmd_args.length !== 1) {
+      print("Invalid usage. start_task \"<task_name>\"");
+      return;
     }
 
     var task = cmd_args[0];
+
+    if (task.length <= 2) {
+      print("Invalid usage. start_task \"<task_name>\"");
+      return;
+    }
+
+    if ((task[0] === "\"" && task[task.length - 1] === "\"") ||
+        (task[0] === "'" && task[task.length - 1] === "'")) {
+      // strip quotes
+      task = task.substring(0, task.length - 1);
+    } else {
+      print("Invalid usage. start_task \"<task_name>\"");
+      return;
+    }
+
     console.log("start_task called with task " + task);
   }
 
