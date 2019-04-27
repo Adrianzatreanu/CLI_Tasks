@@ -15,6 +15,7 @@ class App extends Component {
       msg: "Welcome to CLI Tasks. Please enter your username, or `help` to show a list of helpful commands.",
       topic: "none",
       task: "none",
+      current_task_start: Date.now()
     };
   }
 
@@ -137,29 +138,55 @@ class App extends Component {
       return;
     }
 
-    var cmd_args = args["_"];
-    if (cmd_args.length !== 1) {
+    var task = args["_"];
+    console.log(task);
+    if (task.length === 0) {
       print("Invalid usage. start_task \"<task_name>\"");
       return;
     }
 
-    var task = cmd_args[0];
-
-    if (task.length <= 2) {
-      print("Invalid usage. start_task \"<task_name>\"");
-      return;
-    }
+    task = task.join(' ');
 
     if ((task[0] === "\"" && task[task.length - 1] === "\"") ||
         (task[0] === "'" && task[task.length - 1] === "'")) {
       // strip quotes
-      task = task.substring(0, task.length - 1);
+      task = task.substring(1, task.length - 1);
     } else {
       print("Invalid usage. start_task \"<task_name>\"");
       return;
     }
 
     console.log("start_task called with task " + task);
+    axios.get(server_addr + "/get_all_tasks")
+      .then(response => {
+        console.log(response);
+        var tasks = response["data"]["get_all_tasks"];
+        if (tasks.includes(task)) {
+          this.setState({
+            "task": task,
+            "current_task_start": Date.now()
+          })
+
+          axios.post(server_addr + "/get_task_desc", {
+              task: task
+            })
+            .then(response => {
+              console.log(response);
+              print(response["data"]["get_task_desc"]);
+            })
+            .catch(function (error) {
+              print(server_down_msg);
+            });
+
+        } else {
+          print("Invalid task name");
+          return;
+        }
+      })
+      .catch(function (error) {
+        console.log(error);
+        print(server_down_msg);
+      });
   }
 
   show_current_topic(args, print) {

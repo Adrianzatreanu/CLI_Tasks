@@ -87,6 +87,36 @@ class DbHandler:
         return tasks
 
     @staticmethod
+    def get_all_tasks():
+        with sqlite3.connect(PATH_TO_DB) as conn:
+            cursor = conn.cursor()
+
+            instruction = "select name from tasks"
+            cursor.execute(instruction)
+            rows = cursor.fetchall()
+
+            tasks = []
+
+            for row in rows:
+                tasks.append(row[0])
+
+            return tasks
+
+    @staticmethod
+    def get_task_desc(task):
+        with sqlite3.connect(PATH_TO_DB) as conn:
+            cursor = conn.cursor()
+
+            instruction = "select description from tasks where name='{}'".format(task)
+            cursor.execute(instruction)
+            row = cursor.fetchone()
+
+            if row is None:
+                return "Could not find task " + str(task)
+
+            return row[0]
+
+    @staticmethod
     def get_score_for_user(username):
         with sqlite3.connect(PATH_TO_DB) as conn:
             cursor = conn.cursor()

@@ -56,6 +56,29 @@ def list_tasks():
 
     return json.dumps({"list_tasks": tasks})
 
+@app.route('/get_all_tasks', methods=['GET'])
+def get_all_tasks():
+    if request.method != "GET":
+        return json.dumps({"get_all_tasks": "Only GET is supported"})
+
+    return json.dumps({"get_all_tasks": DbHandler.get_all_tasks()})
+
+@app.route('/get_task_desc', methods=['POST'])
+def get_task_desc():
+    if request.method != "POST":
+        return json.dumps({"get_task_desc": "Only POST is supported"})
+
+    data = request.get_json(force=True)
+
+    sanity_check_result = SanityChecker.perform_get_task_desc_sanity_checks(data)
+    if sanity_check_result != SanityChecker.OK:
+        return json.dumps({"get_task_desc": sanity_check_result})
+
+    task = data["task"]
+
+    return json.dumps({"get_task_desc": DbHandler.get_task_desc(task)})
+
+
 @app.route('/get_score_for_user', methods=['POST'])
 def get_score_for_user():
     if request.method != "POST":
