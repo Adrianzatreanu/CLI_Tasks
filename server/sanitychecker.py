@@ -38,3 +38,14 @@ class SanityChecker:
         if res == "":
             return SanityChecker.OK
         return res
+
+    @staticmethod
+    def perform_get_score_for_user_sanity_checks(data):
+        res = ""
+        
+        if "username" not in data:
+            res += "username missing."
+
+        if res == "":
+            return SanityChecker.OK
+        return res

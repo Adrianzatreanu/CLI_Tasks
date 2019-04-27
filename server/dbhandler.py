@@ -85,3 +85,26 @@ class DbHandler:
         tasks, task_ids = DbHandler.get_tasks(topic)
         DbHandler.add_scores_for_tasks(tasks, task_ids, username)
         return tasks
+
+    @staticmethod
+    def get_score_for_user(username):
+        with sqlite3.connect(PATH_TO_DB) as conn:
+            cursor = conn.cursor()
+
+            instruction = "select id from users where username='{}'".format(username)
+            cursor.execute(instruction)
+            row = cursor.fetchone()
+
+            if row is None:
+                return 0.0
+
+            user_id = row[0]
+
+            instruction = "select sum(score) from scores where user_id={}".format(user_id)
+            cursor.execute(instruction)
+            row = cursor.fetchone()
+
+            if row is None:
+                return 0.0
+
+            return row[0]

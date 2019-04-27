@@ -169,6 +169,17 @@ class App extends Component {
       print("Not logged in.");
       return;
     }
+
+    axios.post(server_addr + "/get_score_for_user", {
+        username: this.state["username"]
+      })
+      .then(response => {
+        console.log(response);
+        print(response["data"]["get_score_for_user"]);
+      })
+      .catch(function (error) {
+        print(server_down_msg);
+      });
   }
 
   check(args, print) {
