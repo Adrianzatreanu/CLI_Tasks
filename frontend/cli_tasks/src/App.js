@@ -4,6 +4,7 @@ import axios from 'axios';
 import Terminal from 'terminal-in-react';
 
 const server_addr = "http://0.0.0.0:8001";
+const server_down_msg = "Server is not up. Please contact the administrator."
 
 class App extends Component {
   constructor (props) {
@@ -34,7 +35,7 @@ class App extends Component {
         }
       })
       .catch(function (error) {
-        console.log(error);
+        print(server_down_msg);
       });
   }
 
@@ -48,7 +49,7 @@ class App extends Component {
         print(response["data"]["execute"])
       })
       .catch(function (error) {
-        console.log(error);
+        print(server_down_msg);
       });
   }
 
@@ -67,7 +68,7 @@ class App extends Component {
         }
       })
       .catch(function (error) {
-        console.log(error);
+        print(server_down_msg);
       });
   }
 
@@ -95,7 +96,7 @@ class App extends Component {
         }
       })
       .catch(function (error) {
-        console.log(error);
+        print(server_down_msg);
       });
   }
 
@@ -126,7 +127,7 @@ class App extends Component {
         }
       })
       .catch(function (error) {
-        console.log(error);
+        print(server_down_msg);
       });
   }
 
