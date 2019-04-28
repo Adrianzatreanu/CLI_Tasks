@@ -13,6 +13,23 @@ def check_login(username):
     # should actually use an authentication service
     return DbHandler.username_exists(username)
 
+def task_completed(username, task):
+    # should run the script on the docker instance
+    if task == "test_task":
+        return True
+    return False
+
+def calculate_score(seconds):
+    # eventually should use some custom formula for each task
+
+    if seconds < 5:
+        return 100
+
+    if seconds > 100:
+        return 0
+
+    return 100 - seconds
+
 @app.route('/login', methods=['POST'])
 def login():
     if request.method != "POST":
@@ -92,7 +109,7 @@ def get_score_for_user():
 
     username = data["username"]
 
-    score = DbHandler.get_score_for_user(username)
+    score = round(DbHandler.get_score_for_user(username), 2)
 
     return json.dumps({"get_score_for_user": score})
 
@@ -110,13 +127,41 @@ def execute():
     cmd = ' '.join(data["cmd"])
     username = data["username"]
     output = "Command is not supported."
-    print("Cmd is: " + str(cmd))
 
     if cmd == "ls":
         output = "a.txt\nb.txt\n"
 
     return json.dumps({"execute": output})
 
+@app.route('/check_task', methods=['POST'])
+def check_task():
+    if request.method != "POST":
+        return json.dumps({"check_task": "Only POST is supported", "message": "Bad request sent (" + str(request.method + ").")})
+    data = request.get_json(force=True)
+
+    sanity_check_result = SanityChecker.perform_check_task_sanity_checks(data)
+    if sanity_check_result != SanityChecker.OK:
+        return json.dumps({"check_task": sanity_check_result, "message": "Bad fields sent to server."})
+
+    username = data["username"]
+    seconds = data["seconds"]
+    task = data["task"]
+    message = ""
+
+    if not task_completed(username, task):
+        message = "Task not completed."
+        return json.dumps({"check_task": "success", "message": message})
+
+    old_score = DbHandler.get_score(username, task)
+    new_score = round(calculate_score(seconds), 2)
+
+    if new_score > old_score:
+        DbHandler.update_score(username, task, new_score)
+        message = "Congrats. New score: " + str(new_score) + ". Old: " + str(old_score)
+    else:
+        message = "Task completed. Score not updated. New: " + str(new_score) + ". Old: " + str(old_score)
+
+    return json.dumps({"check_task": "success", "message": message})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8001, debug=True)

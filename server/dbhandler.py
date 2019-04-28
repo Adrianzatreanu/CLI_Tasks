@@ -1,4 +1,5 @@
 import sqlite3
+import sys
 
 # if called from root directory
 PATH_TO_DB = "db/cli_tasks.db"
@@ -138,3 +139,73 @@ class DbHandler:
                 return 0.0
 
             return row[0]
+
+    @staticmethod
+    def get_score(username, task):
+        with sqlite3.connect(PATH_TO_DB) as conn:
+            cursor = conn.cursor()
+
+            instruction = "select id from users where username='{}'".format(username)
+            cursor.execute(instruction)
+            row = cursor.fetchone()
+
+            if row is None:
+                return 0.0
+
+            user_id = row[0]
+
+            instruction = "select id from tasks where name='{}'".format(task)
+            cursor.execute(instruction)
+            row = cursor.fetchone()
+
+            if row is None:
+                return 0.0
+
+            task_id = row[0]
+
+            instruction = "select score from scores where user_id={} and task_id={}".format(user_id, task_id)
+            cursor.execute(instruction)
+            row = cursor.fetchone()
+
+            if row is None:
+                return 0.0
+
+            return row[0]
+
+    @staticmethod
+    def update_score(username, task, new_score):
+        with sqlite3.connect(PATH_TO_DB) as conn:
+            cursor = conn.cursor()
+
+            instruction = "select id from users where username='{}'".format(username)
+            cursor.execute(instruction)
+            row = cursor.fetchone()
+
+            if row is None:
+                return
+
+            user_id = row[0]
+            print(user_id)
+
+            instruction = "select id from tasks where name='{}'".format(task)
+            cursor.execute(instruction)
+            row = cursor.fetchone()
+
+            if row is None:
+                return
+
+            task_id = row[0]
+
+            instruction = "select score from scores where user_id={} and task_id={}".format(user_id, task_id)
+            cursor.execute(instruction)
+            row = cursor.fetchone()
+
+            if row is None:
+                instruction = "insert into scores(user_id, task_id, score) values({}, {}, {})".format(user_id, task_id, new_score)
+                cursor.execute(instruction)
+                conn.commit()
+                return
+
+            instruction = "update scores set score={} where user_id={} and task_id={}".format(new_score, user_id, task_id)
+            cursor.execute(instruction)
+            conn.commit()

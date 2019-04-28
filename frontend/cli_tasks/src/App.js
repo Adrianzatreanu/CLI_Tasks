@@ -5,16 +5,19 @@ import Terminal from 'terminal-in-react';
 
 const server_addr = "http://0.0.0.0:8001";
 const server_down_msg = "Server is not up. Please contact the administrator."
+const no_topic_active = "none";
+const no_task_active = "none";
+const no_user_active = "guest";
 
 class App extends Component {
   constructor (props) {
     super(props);
     this.props = props;
     this.state = {
-      username: "guest",
+      username: no_user_active,
       msg: "Welcome to CLI Tasks. Please enter your username, or `help` to show a list of helpful commands.",
-      topic: "none",
-      task: "none",
+      topic: no_topic_active,
+      task: no_task_active,
       current_task_start: Date.now()
     };
   }
@@ -237,6 +240,28 @@ class App extends Component {
       print("No task selected.");
       return;
     }
+
+    var time_diff_seconds = (Date.now() - this.state["current_task_start"]) / 1000;
+    print("Time diff in seconds is " + time_diff_seconds);
+
+    axios.post(server_addr + "/check_task", {
+        username: this.state["username"],
+        seconds: time_diff_seconds,
+        task: this.state["task"]
+      })
+      .then(response => {
+        console.log(response);
+        if (response["data"]["check_task"] === "success") {
+          this.setState({
+            "task": no_task_active
+          });
+        }
+
+        print(response["data"]["message"]);
+      })
+      .catch(function (error) {
+        print(server_down_msg);
+      });
   }
 
   check_current_time(args, print) {
@@ -251,19 +276,19 @@ class App extends Component {
     }
 
     var time_diff = new Date(Date.now() - this.state["current_task_start"]);
-    print(time_diff.getUTCMinutes() + " minutes and " + time_diff.getUTCSeconds() + " seconds elapsed.");
+    print(time_diff.getUTCMinutes() + " minute(s) and " + time_diff.getUTCSeconds() + " second(s) elapsed.");
   }
 
   logged_in() {
-    return this.state["username"] !== "guest";
+    return this.state["username"] !== no_user_active;
   }
 
   task_selected() {
-    return this.state["task"] !== "none";
+    return this.state["task"] !== no_task_active;
   }
 
   topic_selected() {
-    return this.state["topic"] !== "none";
+    return this.state["topic"] !== no_topic_active;
   }
 
   render() {
@@ -365,7 +390,7 @@ class App extends Component {
             'check_current_time': "shows time in seconds since task was started",
           }}
           commandPassThrough={(cmd, print) => {
-            if (this.state["username"] === "guest") {
+            if (!this.logged_in()) {
               this.login(cmd, print);
             }
             else {
