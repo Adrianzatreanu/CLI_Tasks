@@ -298,7 +298,17 @@ class App extends Component {
                 this.change_topic(args, print);
               }
             },
+            'ct': {
+              method: (args, print, runCommand) => {
+                this.change_topic(args, print);
+              }
+            },
             'start_task': {
+              method: (args, print, runCommand) => {
+                this.start_task(args, print);
+              }
+            },
+            'st': {
               method: (args, print, runCommand) => {
                 this.start_task(args, print);
               }
@@ -308,7 +318,17 @@ class App extends Component {
                 this.show_current_topic(args, print);
               }
             },
+            'sct': {
+              method: (args, print, runCommand) => {
+                this.show_current_topic(args, print);
+              }
+            },
             'show_score': {
+              method: (args, print, runCommand) => {
+                this.show_score(args, print);
+              }
+            },
+            'ss': {
               method: (args, print, runCommand) => {
                 this.show_score(args, print);
               }
@@ -318,7 +338,17 @@ class App extends Component {
                 this.check(args, print);
               }
             },
+            'c': {
+              method: (args, print, runCommand) => {
+                this.check(args, print);
+              }
+            },
             'check_current_time': {
+              method: (args, print, runCommand) => {
+                this.check_current_time(args, print);
+              }
+            },
+            'cct': {
               method: (args, print, runCommand) => {
                 this.check_current_time(args, print);
               }
