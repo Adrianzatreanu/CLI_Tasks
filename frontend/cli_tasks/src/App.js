@@ -233,8 +233,15 @@ class App extends Component {
       return;
     }
 
-    if (!this.topic_selected()) {
-      print("No topic selected");
+    if (!this.task_selected()) {
+      print("No task selected.");
+      return;
+    }
+  }
+
+  check_current_time(args, print) {
+    if (!this.logged_in()) {
+      print("Not logged in.");
       return;
     }
 
@@ -242,6 +249,9 @@ class App extends Component {
       print("No task selected.");
       return;
     }
+
+    var time_diff = new Date(Date.now() - this.state["current_task_start"]);
+    print(time_diff.getUTCMinutes() + " minutes and " + time_diff.getUTCSeconds() + " seconds elapsed.");
   }
 
   logged_in() {
@@ -307,6 +317,11 @@ class App extends Component {
               method: (args, print, runCommand) => {
                 this.check(args, print);
               }
+            },
+            'check_current_time': {
+              method: (args, print, runCommand) => {
+                this.check_current_time(args, print);
+              }
             }
           }}
           descriptions={{
@@ -317,6 +332,7 @@ class App extends Component {
             'show_current_topic': 'shows current active topic',
             'show_score': "shows your current score",
             'check': "checks if the current task is complete and updates score if needed",
+            'check_current_time': "shows time in seconds since task was started",
           }}
           commandPassThrough={(cmd, print) => {
             if (this.state["username"] === "guest") {
