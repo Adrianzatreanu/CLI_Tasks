@@ -159,6 +159,17 @@ def execute():
     if cmd == "ls":
         output = "mkr.txt"
 
+
+    user_dir_path = PATH_TO_SERVER + "containers/" + username
+    new_env = os.environ
+    new_env["VAGRANT_CWD"] = user_dir_path
+
+    split_cmd = cmd.split(' ')
+    split_cmd = ["vagrant", "ssh", "--"] + split_cmd
+    print(split_cmd)
+    p = subprocess.Popen([] + split_cmd, env=new_env, stdout=subprocess.PIPE)
+    output = p.communicate()[0].decode('utf-8')
+
     return json.dumps({"execute": output})
 
 @app.route('/check_task', methods=['POST'])
