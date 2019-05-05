@@ -105,3 +105,6 @@ venv.bak/
 
 # node
 node_modules/
+
+containers/
+.vagrant
