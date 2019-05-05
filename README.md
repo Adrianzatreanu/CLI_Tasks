@@ -17,6 +17,7 @@ $ python3 -m pip install -r requirements.txt
 For the server, there are also additional services that must be run:
 - a nomad service and cluster
 - a consul service
+- a vmck web server
 - install a vagrant plugin
 
 The vagrant plugin simply needs `vagrant` installed and can be installed using:
@@ -24,7 +25,7 @@ The vagrant plugin simply needs `vagrant` installed and can be installed using:
 $ vagrant plugin install vagrant-vmck
 ```
 
-Instructions for nomad and consul will be added later.
+Instructions for the webserver, nomad and consul will be added later.
 
 
 # Usage
