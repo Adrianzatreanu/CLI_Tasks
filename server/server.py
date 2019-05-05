@@ -1,17 +1,45 @@
 from flask import Flask, request
 from flask_cors import CORS
+from shutil import copyfile
 import json
+import os
+import subprocess
+from time import sleep
 
 from sanitychecker import SanityChecker
 from dbhandler import DbHandler
 
+PATH_TO_SERVER="server/"
 app = Flask(__name__)
 CORS(app)
 
 def check_login(username):
     # currently only checks for the username.
     # should actually use an authentication service
-    return DbHandler.username_exists(username)
+    okay = DbHandler.username_exists(username)
+
+    if okay:
+        containers_dir_path = PATH_TO_SERVER + "containers"
+        if not os.path.exists(containers_dir_path):
+            os.mkdir(containers_dir_path)
+        user_dir_path = PATH_TO_SERVER + "containers/" + username
+        if not os.path.exists(user_dir_path):
+            os.mkdir(user_dir_path)
+        vagrant_file_path = user_dir_path + "/Vagrantfile"
+        if not os.path.exists(vagrant_file_path):
+            copyfile(PATH_TO_SERVER + "Vagrantfile", vagrant_file_path)
+
+        new_env = os.environ
+        new_env["VAGRANT_CWD"] = user_dir_path
+        p = subprocess.Popen(["vagrant", "destroy"], env=new_env, stdout=subprocess.PIPE)
+        sleep(5)
+        print("Destroyed")
+        p = subprocess.Popen(["vagrant", "up"], env=new_env, stdout=subprocess.PIPE)
+        print(p.communicate())
+        print("Sleeping 7s")
+        sleep(7)
+        print("Done")
+    return okay
 
 def task_completed(username, task):
     # should run the script on the docker instance
@@ -129,7 +157,7 @@ def execute():
     output = "Command is not supported."
 
     if cmd == "ls":
-        output = "a.txt\nb.txt\n"
+        output = "mkr.txt"
 
     return json.dumps({"execute": output})
 
