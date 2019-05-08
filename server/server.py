@@ -39,20 +39,31 @@ def check_login(username):
         new_env["VAGRANT_CWD"] = user_dir_path
         try:
             p = subprocess.Popen(["vagrant", "destroy"], env=new_env, stdout=subprocess.PIPE)
-            sleep(5)
+            p.wait()
             print("Destroyed")
         except:
             print("Machine did not exist so it could not be destroyed")
         p = subprocess.Popen(["vagrant", "up"], env=new_env, stdout=subprocess.PIPE)
-        print(p.communicate())
-        print("Sleeping 7s")
-        sleep(7)
-        print("Done")
+        print(p.communicate()[0].decode('utf-8'))
+        p.wait()
+        print("Machine brought up.")
         ssh_config_file_path = user_dir_path + "/ssh_config"
 
         with open(ssh_config_file_path, 'w') as output:
             p = subprocess.Popen(["vagrant", "ssh-config"], env=new_env, stdout=output)
-            print(p.communicate())
+            p.wait()
+            print("Config file written")
+
+        split_cmd = ["ssh", "-F", ssh_config_file_path, "default", "-C", "sudo", "mkdir", "/scripts"]
+        p = subprocess.Popen(split_cmd, env=new_env, stdout=subprocess.PIPE)
+        print(p.communicate())
+        p.wait()
+
+        split_cmd = ["ssh", "-F", ssh_config_file_path, "default", "-C", "sudo", "chmod", "777", "/scripts"]
+        p = subprocess.Popen(split_cmd, env=new_env, stdout=subprocess.PIPE)
+        print(p.communicate())
+        p.wait()
+
     return okay
 
 def task_completed(username, task):
@@ -121,6 +132,34 @@ def get_all_tasks():
         return json.dumps({"get_all_tasks": "Only GET is supported"})
 
     return json.dumps({"get_all_tasks": DbHandler.get_all_tasks()})
+
+@app.route('/initialize_task', methods=['POST'])
+def initialize_task():
+    if request.method != "POST":
+        return json.dumps({"initialize_task": "Only POST is supported"})
+
+    data = request.get_json(force=True)
+
+    sanity_check_result = SanityChecker.perform_initialize_task_desc_sanity_checks(data)
+    if sanity_check_result != SanityChecker.OK:
+        return json.dumps({"initialize_task": sanity_check_result})
+
+    task = data["task"]
+    username = data["username"]
+
+    user_dir_path = PATH_TO_SERVER + "containers/" + username
+    new_env = os.environ
+    new_env["VAGRANT_CWD"] = user_dir_path
+
+    script_name = DbHandler.get_checker_name(task)
+
+    if script_name == "":
+        json.dumps({"initialize_task": "Could not find task"})
+
+    script_path = "scripts/" + script_name
+    p = subprocess.Popen(["vagrant", "upload", script_path, "/scripts/" + script_name], env=new_env, stdout=subprocess.PIPE)
+
+    return json.dumps({"initialize_task": "done"})
 
 @app.route('/get_task_desc', methods=['POST'])
 def get_task_desc():

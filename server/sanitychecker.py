@@ -77,3 +77,17 @@ class SanityChecker:
         if res == "":
             return SanityChecker.OK
         return res
+
+    @staticmethod
+    def perform_initialize_task_desc_sanity_checks(data):
+        res = ""
+
+        if "username" not in data:
+            res += "username missing."
+
+        if "task" not in data:
+            res += "task missing."
+
+        if res == "":
+            return SanityChecker.OK
+        return res

@@ -23,13 +23,14 @@ class App extends Component {
   }
 
   login(cmd, print) {
+    print("Initializing resources..")
     axios.post(server_addr + "/login", {
         username: cmd
       })
       .then(response => {
         console.log(response);
         if (response["data"]["login"] === "success") {
-          print("Login successful.")
+          print("Login successful. Resources initialized.")
           this.setState({
             username: cmd[0],
             msg: "Type `help` to show a list of helpful commands."
@@ -39,6 +40,7 @@ class App extends Component {
         }
       })
       .catch(function (error) {
+        console.log(error);
         print(server_down_msg);
       });
   }
@@ -170,12 +172,34 @@ class App extends Component {
             "current_task_start": Date.now()
           })
 
-          axios.post(server_addr + "/get_task_desc", {
-              task: task
+          print("Initializing task");
+
+          axios.post(server_addr + "/initialize_task", {
+              task: this.state["task"],
+              username: this.state["username"]
             })
             .then(response => {
               console.log(response);
-              print(response["data"]["get_task_desc"]);
+              var task_initialized = response["data"]["initialize_task"];
+
+              if (task_initialized === "done") {
+                print("Task initialized.");
+                axios.post(server_addr + "/get_task_desc", {
+                    task: task
+                  })
+                  .then(response => {
+                    console.log(response);
+                    print(response["data"]["get_task_desc"]);
+                  })
+                  .catch(function (error) {
+                    print(server_down_msg);
+                  });
+              } else {
+                print("Task could not be initialized");
+                this.setState({
+                  "task": no_task_active
+                })
+              }
             })
             .catch(function (error) {
               print(server_down_msg);
