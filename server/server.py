@@ -13,6 +13,12 @@ PATH_TO_SERVER="server/"
 app = Flask(__name__)
 CORS(app)
 
+SSH_SHARED_COMM_CONFIG = """
+host *
+    controlmaster auto
+    controlpath /tmp/ssh-%r@%h:%p
+"""
+
 def check_login(username):
     # currently only checks for the username.
     # should actually use an authentication service
@@ -31,14 +37,22 @@ def check_login(username):
 
         new_env = os.environ
         new_env["VAGRANT_CWD"] = user_dir_path
-        p = subprocess.Popen(["vagrant", "destroy"], env=new_env, stdout=subprocess.PIPE)
-        sleep(5)
-        print("Destroyed")
+        try:
+            p = subprocess.Popen(["vagrant", "destroy"], env=new_env, stdout=subprocess.PIPE)
+            sleep(5)
+            print("Destroyed")
+        except:
+            print("Machine did not exist so it could not be destroyed")
         p = subprocess.Popen(["vagrant", "up"], env=new_env, stdout=subprocess.PIPE)
         print(p.communicate())
         print("Sleeping 7s")
         sleep(7)
         print("Done")
+        ssh_config_file_path = user_dir_path + "/ssh_config"
+
+        with open(ssh_config_file_path, 'w') as output:
+            p = subprocess.Popen(["vagrant", "ssh-config"], env=new_env, stdout=output)
+            print(p.communicate())
     return okay
 
 def task_completed(username, task):
@@ -164,10 +178,12 @@ def execute():
     new_env = os.environ
     new_env["VAGRANT_CWD"] = user_dir_path
 
+    ssh_config_file_path = user_dir_path + "/ssh_config"
+
     split_cmd = cmd.split(' ')
-    split_cmd = ["vagrant", "ssh", "--"] + split_cmd
+    split_cmd = ["ssh", "-F", ssh_config_file_path, "default", "-C"] + split_cmd
     print(split_cmd)
-    p = subprocess.Popen([] + split_cmd, env=new_env, stdout=subprocess.PIPE)
+    p = subprocess.Popen(split_cmd, env=new_env, stdout=subprocess.PIPE)
     output = p.communicate()[0].decode('utf-8')
 
     return json.dumps({"execute": output})
