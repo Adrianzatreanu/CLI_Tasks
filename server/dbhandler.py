@@ -223,3 +223,26 @@ class DbHandler:
                 return ""
 
             return row[0]
+
+    @staticmethod
+    def get_checker_language(task):
+        with sqlite3.connect(PATH_TO_DB) as conn:
+            cursor = conn.cursor()
+
+            instruction = "select checker_language_id from tasks where name='{}'".format(task)
+            cursor.execute(instruction)
+            row = cursor.fetchone()
+
+            if row is None:
+                return ""
+
+            checker_language_id = row[0]
+
+            instruction = "select name from checker_languages where id={}".format(checker_language_id)
+            cursor.execute(instruction)
+            row = cursor.fetchone()
+
+            if row is None:
+                return ""
+
+            return row[0]

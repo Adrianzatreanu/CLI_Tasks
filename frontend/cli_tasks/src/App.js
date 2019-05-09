@@ -3,7 +3,7 @@ import './App.css';
 import axios from 'axios';
 import Terminal from 'terminal-in-react';
 
-const server_addr = "http://0.0.0.0:8001";
+const server_addr = "http://192.168.1.119:8001";
 const server_down_msg = "Server is not up. Please contact the administrator."
 const no_topic_active = "none";
 const no_task_active = "none";

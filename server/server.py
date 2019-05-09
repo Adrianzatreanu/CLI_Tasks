@@ -67,9 +67,29 @@ def check_login(username):
     return okay
 
 def task_completed(username, task):
-    # should run the script on the docker instance
     if task == "test_task":
         return True
+
+    user_dir_path = PATH_TO_SERVER + "containers/" + username
+    new_env = os.environ
+    new_env["VAGRANT_CWD"] = user_dir_path
+
+    ssh_config_file_path = user_dir_path + "/ssh_config"
+    script_location = DbHandler.get_checker_name(task)
+    script_location = "/scripts/" + script_location
+
+    checker_language = DbHandler.get_checker_language(task)
+    print(checker_language)
+
+    if checker_language == "shell":
+        split_cmd = ["ssh", "-F", ssh_config_file_path, "default", "-C", "chmod", "777", script_location]
+        p = subprocess.Popen(split_cmd, env=new_env, stdout=subprocess.PIPE)
+        p.wait()
+        split_cmd = ["ssh", "-F", ssh_config_file_path, "default", "-C", script_location]
+        p = subprocess.Popen(split_cmd, env=new_env, stdout=subprocess.PIPE)
+        p.wait()
+        print(p.returncode)
+        return p.returncode == 0
     return False
 
 def calculate_score(seconds):
@@ -244,7 +264,7 @@ def check_task():
 
     if not task_completed(username, task):
         message = "Task not completed."
-        return json.dumps({"check_task": "success", "message": message})
+        return json.dumps({"check_task": "failed", "message": message})
 
     old_score = DbHandler.get_score(username, task)
     new_score = round(calculate_score(seconds), 2)
