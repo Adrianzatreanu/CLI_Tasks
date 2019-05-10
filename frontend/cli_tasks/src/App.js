@@ -23,18 +23,32 @@ class App extends Component {
   }
 
   login(cmd, print) {
-    print("Initializing resources..")
     axios.post(server_addr + "/login", {
         username: cmd
       })
       .then(response => {
         console.log(response);
         if (response["data"]["login"] === "success") {
-          print("Login successful. Resources initialized.")
+          print("Login successful.")
           this.setState({
             username: cmd[0],
             msg: "Type `help` to show a list of helpful commands."
           });
+          print("Initializing resources. Please wait 5-10 seconds..");
+          axios.post(server_addr + "/initialize_resources", {
+              username: this.state["username"]
+            })
+            .then(function (response) {
+              console.log(response);
+              if (response["data"]["initialize_resources"] === "success") {
+                print("Resources initialized.");
+              } else {
+                print("Could not initialize resources. Please try again by refreshing the browser.");
+              }
+            })
+            .catch(function (error) {
+              print(server_down_msg);
+            });
         } else {
           print("Login failed. Try again.")
         }

@@ -22,49 +22,77 @@ host *
 def check_login(username):
     # currently only checks for the username.
     # should actually use an authentication service
-    okay = DbHandler.username_exists(username)
+    return DbHandler.username_exists(username)
 
-    if okay:
-        containers_dir_path = PATH_TO_SERVER + "containers"
-        if not os.path.exists(containers_dir_path):
-            os.mkdir(containers_dir_path)
-        user_dir_path = PATH_TO_SERVER + "containers/" + username
-        if not os.path.exists(user_dir_path):
-            os.mkdir(user_dir_path)
-        vagrant_file_path = user_dir_path + "/Vagrantfile"
-        if not os.path.exists(vagrant_file_path):
-            copyfile(PATH_TO_SERVER + "Vagrantfile", vagrant_file_path)
+def create_folder_structure(username):
+    containers_dir_path = PATH_TO_SERVER + "containers"
+    if not os.path.exists(containers_dir_path):
+        os.mkdir(containers_dir_path)
+    user_dir_path = PATH_TO_SERVER + "containers/" + username
+    if not os.path.exists(user_dir_path):
+        os.mkdir(user_dir_path)
+    vagrant_file_path = user_dir_path + "/Vagrantfile"
+    if not os.path.exists(vagrant_file_path):
+        copyfile(PATH_TO_SERVER + "Vagrantfile", vagrant_file_path)
 
-        new_env = os.environ
-        new_env["VAGRANT_CWD"] = user_dir_path
-        try:
-            p = subprocess.Popen(["vagrant", "destroy"], env=new_env, stdout=subprocess.PIPE)
-            p.wait()
-            print("Destroyed")
-        except:
-            print("Machine did not exist so it could not be destroyed")
-        p = subprocess.Popen(["vagrant", "--vm-name=" + username, "up"], env=new_env, stdout=subprocess.PIPE)
-        print(p.communicate()[0].decode('utf-8'))
+def destroy_container(env, username):
+    try:
+        p = subprocess.Popen(["vagrant", "--vm-name=" + username, "destroy"], env=env, stdout=subprocess.PIPE)
         p.wait()
-        print("Machine brought up.")
-        ssh_config_file_path = user_dir_path + "/ssh_config"
+        print("Destroyed")
+    except Exception as e:
+        print("Machine did not exist so it could not be destroyed")
+        print(str(e))
+    return True
 
-        with open(ssh_config_file_path, 'w') as output:
-            p = subprocess.Popen(["vagrant", "--vm-name=" + username, "ssh-config"], env=new_env, stdout=output)
-            p.wait()
-            print("Config file written")
+def create_container(env, username):
+    p = subprocess.Popen(["vagrant", "--vm-name=" + username, "up"], env=env, stdout=subprocess.PIPE)
+    print(p.communicate()[0].decode('utf-8'))
+    p.wait()
+    print("Machine brought up.")
+    return True
 
-        split_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C", "sudo", "mkdir", "/scripts"]
-        p = subprocess.Popen(split_cmd, env=new_env, stdout=subprocess.PIPE)
-        print(p.communicate())
+def create_ssh_config(env, username, ssh_config_file_path):
+    with open(ssh_config_file_path, 'w') as output:
+        p = subprocess.Popen(["vagrant", "--vm-name=" + username, "ssh-config"], env=env, stdout=output)
         p.wait()
+        print("Config file written")
+    return True
 
-        split_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C", "sudo", "chmod", "777", "/scripts"]
-        p = subprocess.Popen(split_cmd, env=new_env, stdout=subprocess.PIPE)
-        print(p.communicate())
-        p.wait()
+def create_scripts_dir(env, username, ssh_config_file_path):
+    split_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C", "sudo", "mkdir", "/scripts"]
+    p = subprocess.Popen(split_cmd, env=env, stdout=subprocess.PIPE)
+    print(p.communicate())
+    p.wait()
 
-    return okay
+    split_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C", "sudo", "chmod", "777", "/scripts"]
+    p = subprocess.Popen(split_cmd, env=env, stdout=subprocess.PIPE)
+    print(p.communicate())
+    p.wait()
+    return True
+
+def init_resources(username):
+    create_folder_structure(username)
+
+    user_dir_path = PATH_TO_SERVER + "containers/" + username
+    ssh_config_file_path = user_dir_path + "/ssh_config"
+
+    new_env = os.environ
+    new_env["VAGRANT_CWD"] = user_dir_path
+
+    if not destroy_container(new_env, username):
+        return False
+
+    if not create_container(new_env, username):
+        return False
+
+    if not create_ssh_config(new_env, username, ssh_config_file_path):
+        return False
+
+    if not create_scripts_dir(new_env, username, ssh_config_file_path):
+        return False
+
+    return True
 
 def task_completed(username, task):
     if task == "test_task":
@@ -118,6 +146,23 @@ def login():
         return json.dumps({"login": "failed"})
 
     return json.dumps({"login": "success"})
+
+@app.route('/initialize_resources', methods=['POST'])
+def initialize_resources():
+    if request.method != "POST":
+        return json.dumps({"initialize_resources": "Only POST is supported"})
+    data = request.get_json(force=True)
+
+    sanity_check_result = SanityChecker.perform_login_sanity_checks(data)
+    if sanity_check_result != SanityChecker.OK:
+        return json.dumps({"initialize_resources": sanity_check_result})
+
+    username = data["username"]
+
+    if not init_resources(username):
+        return json.dumps({"initialize_resources": "failed"})
+
+    return json.dumps({"initialize_resources": "success"})
 
 @app.route('/list_topics', methods=['GET'])
 def list_topics():
