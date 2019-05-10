@@ -1,9 +1,27 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+require 'getoptlong'
+
+opts = GetoptLong.new(
+  [ '--vm-name',        GetoptLong::OPTIONAL_ARGUMENT ],
+)
+vm_name        = ENV['VM_NAME'] || 'default'
+
+begin
+  opts.each do |opt, arg|
+    case opt
+      when '--vm-name'
+        vm_name = arg
+    end
+  end
+  rescue
+end
+
 Vagrant.configure("2") do |config|
 
   config.vm.box = "base"
+  config.vm.define vm_name
 
   config.vm.provider :vmck do |provider|
     provider.vmck_url = 'http://127.0.0.1:8000'

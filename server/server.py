@@ -43,23 +43,23 @@ def check_login(username):
             print("Destroyed")
         except:
             print("Machine did not exist so it could not be destroyed")
-        p = subprocess.Popen(["vagrant", "up"], env=new_env, stdout=subprocess.PIPE)
+        p = subprocess.Popen(["vagrant", "--vm-name=" + username, "up"], env=new_env, stdout=subprocess.PIPE)
         print(p.communicate()[0].decode('utf-8'))
         p.wait()
         print("Machine brought up.")
         ssh_config_file_path = user_dir_path + "/ssh_config"
 
         with open(ssh_config_file_path, 'w') as output:
-            p = subprocess.Popen(["vagrant", "ssh-config"], env=new_env, stdout=output)
+            p = subprocess.Popen(["vagrant", "--vm-name=" + username, "ssh-config"], env=new_env, stdout=output)
             p.wait()
             print("Config file written")
 
-        split_cmd = ["ssh", "-F", ssh_config_file_path, "default", "-C", "sudo", "mkdir", "/scripts"]
+        split_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C", "sudo", "mkdir", "/scripts"]
         p = subprocess.Popen(split_cmd, env=new_env, stdout=subprocess.PIPE)
         print(p.communicate())
         p.wait()
 
-        split_cmd = ["ssh", "-F", ssh_config_file_path, "default", "-C", "sudo", "chmod", "777", "/scripts"]
+        split_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C", "sudo", "chmod", "777", "/scripts"]
         p = subprocess.Popen(split_cmd, env=new_env, stdout=subprocess.PIPE)
         print(p.communicate())
         p.wait()
@@ -82,10 +82,10 @@ def task_completed(username, task):
     print(checker_language)
 
     if checker_language == "shell":
-        split_cmd = ["ssh", "-F", ssh_config_file_path, "default", "-C", "chmod", "777", script_location]
+        split_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C", "chmod", "777", script_location]
         p = subprocess.Popen(split_cmd, env=new_env, stdout=subprocess.PIPE)
         p.wait()
-        split_cmd = ["ssh", "-F", ssh_config_file_path, "default", "-C", script_location]
+        split_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C", script_location]
         p = subprocess.Popen(split_cmd, env=new_env, stdout=subprocess.PIPE)
         p.wait()
         print(p.returncode)
@@ -240,7 +240,7 @@ def execute():
     ssh_config_file_path = user_dir_path + "/ssh_config"
 
     split_cmd = cmd.split(' ')
-    split_cmd = ["ssh", "-F", ssh_config_file_path, "default", "-C"] + split_cmd
+    split_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C"] + split_cmd
     print(split_cmd)
     p = subprocess.Popen(split_cmd, env=new_env, stdout=subprocess.PIPE)
     output = p.communicate()[0].decode('utf-8')
