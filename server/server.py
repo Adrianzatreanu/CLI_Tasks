@@ -8,16 +8,20 @@ from time import sleep
 
 from sanitychecker import SanityChecker
 from dbhandler import DbHandler
+from state import State
 
 PATH_TO_SERVER="server/"
 app = Flask(__name__)
 CORS(app)
+states = dict()
 
 SSH_SHARED_COMM_CONFIG = """
 host *
     controlmaster auto
     controlpath /tmp/ssh-%r@%h:%p
 """
+
+ENV_VARS_LOCATION = "/.env_vars"
 
 def check_login(username):
     # currently only checks for the username.
@@ -71,6 +75,102 @@ def create_scripts_dir(env, username, ssh_config_file_path):
     p.wait()
     return True
 
+def create_chroot(env, username, ssh_config_file_path):
+    TARGETDIR = "/mnt/chroot"
+    split_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C", "sudo", "mkdir", TARGETDIR]
+    p = subprocess.Popen(split_cmd, env=env, stdout=subprocess.PIPE)
+    print(p.communicate())
+    p.wait()
+
+    split_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C", "sudo", "mkdir", TARGETDIR + "/proc"]
+    p = subprocess.Popen(split_cmd, env=env, stdout=subprocess.PIPE)
+    print(p.communicate())
+    p.wait()
+
+    split_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C", "sudo", "mkdir", TARGETDIR + "/sys"]
+    p = subprocess.Popen(split_cmd, env=env, stdout=subprocess.PIPE)
+    print(p.communicate())
+    p.wait()
+
+    split_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C", "sudo", "mkdir", TARGETDIR + "/dev"]
+    p = subprocess.Popen(split_cmd, env=env, stdout=subprocess.PIPE)
+    print(p.communicate())
+    p.wait()
+
+    split_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C", "sudo", "mkdir", TARGETDIR + "/dev/shm"]
+    p = subprocess.Popen(split_cmd, env=env, stdout=subprocess.PIPE)
+    print(p.communicate())
+    p.wait()
+
+    split_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C", "sudo", "mkdir", TARGETDIR + "/dev/pts"]
+    p = subprocess.Popen(split_cmd, env=env, stdout=subprocess.PIPE)
+    print(p.communicate())
+    p.wait()
+
+    split_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C", "sudo", "mkdir", TARGETDIR + "/bin"]
+    p = subprocess.Popen(split_cmd, env=env, stdout=subprocess.PIPE)
+    print(p.communicate())
+    p.wait()
+
+    split_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C", "sudo", "mkdir", TARGETDIR + "/lib"]
+    p = subprocess.Popen(split_cmd, env=env, stdout=subprocess.PIPE)
+    print(p.communicate())
+    p.wait()
+
+    split_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C", "sudo", "mount", "--bind", "/proc/", TARGETDIR + "/proc"]
+    p = subprocess.Popen(split_cmd, env=env, stdout=subprocess.PIPE)
+    print(p.communicate())
+    p.wait()
+
+    split_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C", "sudo", "mount", "-t", "sysfs", "sysfs", TARGETDIR + "/sys"]
+    p = subprocess.Popen(split_cmd, env=env, stdout=subprocess.PIPE)
+    print(p.communicate())
+    p.wait()
+
+    split_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C", "sudo", "mount", "-t", "devtmpfs", "devtmpfs", TARGETDIR + "/dev"]
+    p = subprocess.Popen(split_cmd, env=env, stdout=subprocess.PIPE)
+    print(p.communicate())
+    p.wait()
+
+    split_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C", "sudo", "mount", "-t", "tmpfs", "tmpfs", TARGETDIR + "/dev/shm"]
+    p = subprocess.Popen(split_cmd, env=env, stdout=subprocess.PIPE)
+    print(p.communicate())
+    p.wait()
+
+    split_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C", "sudo", "mount", "-t", "devpts", "devpts", TARGETDIR + "/dev/pts"]
+    p = subprocess.Popen(split_cmd, env=env, stdout=subprocess.PIPE)
+    print(p.communicate())
+    p.wait()
+
+    split_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C", "sudo", "ln", "/bin", TARGETDIR + "/bin"]
+    p = subprocess.Popen(split_cmd, env=env, stdout=subprocess.PIPE)
+    print(p.communicate())
+    p.wait()
+
+    split_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C", "sudo", "mount", "--bind", "/lib", TARGETDIR + "/lib"]
+    p = subprocess.Popen(split_cmd, env=env, stdout=subprocess.PIPE)
+    print(p.communicate())
+    p.wait()
+
+    return True
+
+def init_state(env, username, ssh_config_file_path):
+    global states
+    states[username] = State(username)
+    states[username].set_cwd("~")
+
+    split_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C", "sudo", "touch", ENV_VARS_LOCATION]
+    p = subprocess.Popen(split_cmd, env=env, stdout=subprocess.PIPE)
+    print(p.communicate())
+    p.wait()
+
+    split_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C", "sudo", "chmod", "777", ENV_VARS_LOCATION]
+    p = subprocess.Popen(split_cmd, env=env, stdout=subprocess.PIPE)
+    print(p.communicate())
+    p.wait()
+
+    return True
+
 def init_resources(username):
     create_folder_structure(username)
 
@@ -91,6 +191,14 @@ def init_resources(username):
 
     if not create_scripts_dir(new_env, username, ssh_config_file_path):
         return False
+
+    if not init_state(new_env, username, ssh_config_file_path):
+        return False
+
+
+    # TODO: fix this
+    # if not create_chroot(new_env, username, ssh_config_file_path):
+    #     return False
 
     return True
 
@@ -122,14 +230,7 @@ def task_completed(username, task):
 
 def calculate_score(seconds):
     # eventually should use some custom formula for each task
-
-    if seconds < 5:
-        return 100
-
-    if seconds > 100:
-        return 0
-
-    return 100 - seconds
+    return 100
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -259,6 +360,18 @@ def get_score_for_user():
 
     return json.dumps({"get_score_for_user": score})
 
+def change_directory(cmd, username):
+    global states
+    print("here" + states[username].get_cwd())
+    cmd.append("cd")
+    cmd.append(states[username].get_cwd())
+    cmd.append(";")
+
+def save_env_vars(cmd):
+    cmd.append("; echo")
+    cmd.append("$PWD")
+    cmd.append(">")
+    cmd.append(ENV_VARS_LOCATION)
 
 @app.route('/execute', methods=['POST'])
 def execute():
@@ -285,10 +398,32 @@ def execute():
     ssh_config_file_path = user_dir_path + "/ssh_config"
 
     split_cmd = cmd.split(' ')
-    split_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C"] + split_cmd
+    initial_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C"]
+    change_directory(initial_cmd, username)
+    split_cmd = initial_cmd + split_cmd
+    save_env_vars(split_cmd)
     print(split_cmd)
-    p = subprocess.Popen(split_cmd, env=new_env, stdout=subprocess.PIPE)
-    output = p.communicate()[0].decode('utf-8')
+    p = subprocess.Popen(split_cmd, env=new_env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    output, err = p.communicate()
+    p.wait()
+
+    output = output.decode('utf-8')
+    err = err.decode('utf-8')
+    if output == "":
+        output = err
+
+    p = subprocess.Popen(["ssh", "-F", ssh_config_file_path, username, "-C", "cat", ENV_VARS_LOCATION, "|", "tr", "'\n'", "' '"], env=new_env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    env_var_output, err = p.communicate()
+    p.wait()
+
+    states[username].set_cwd(env_var_output.decode('utf-8'))
+    print(env_var_output.decode('utf-8'))
+    # TODO: fix
+    # TARGETDIR = "/mnt/chroot"
+    # split_cmd = ["ssh", "-F", ssh_config_file_path, username, "-C", "sudo", "chroot", TARGETDIR, "pwd"]
+    # p = subprocess.Popen(split_cmd, env=new_env, stdout=subprocess.PIPE)
+    # print(p.communicate())
+    # p.wait()
 
     return json.dumps({"execute": output})
 
