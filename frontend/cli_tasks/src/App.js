@@ -137,14 +137,16 @@ class App extends Component {
       .then(response => {
         console.log(response);
         var topics = response["data"]["list_topics"];
-        if (topics.includes(topic)) {
-          print("Topic changed successfully.");
-          this.setState({
-            "topic": topic
-          })
-        } else {
-          print("Invalid topic name");
+        for (var i = 0; i < topics.length; i++) {
+          if (topic.toLowerCase() === topics[i].toLowerCase()) {
+            print("Topic changed successfully.");
+            this.setState({
+              "topic": topics[i]
+            });
+            return;
+          }
         }
+        print("Invalid topic name");
       })
       .catch(function (error) {
         print(server_down_msg);
