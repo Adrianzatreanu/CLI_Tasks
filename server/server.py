@@ -323,7 +323,8 @@ def initialize_task():
         json.dumps({"initialize_task": "Could not find task"})
 
     script_path = "scripts/" + script_name
-    p = subprocess.Popen(["vagrant", "upload", script_path, "/scripts/" + script_name], env=new_env, stdout=subprocess.PIPE)
+    p = subprocess.Popen(["vagrant", "--vm-name=" + username, "upload", script_path, "/scripts/" + script_name], env=new_env, stdout=subprocess.PIPE)
+    p.wait()
 
     return json.dumps({"initialize_task": "done"})
 

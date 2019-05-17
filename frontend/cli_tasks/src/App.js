@@ -186,7 +186,7 @@ class App extends Component {
             "current_task_start": Date.now()
           })
 
-          print("Initializing task");
+          print("Initializing task.. please wait.");
 
           axios.post(server_addr + "/initialize_task", {
               task: this.state["task"],
