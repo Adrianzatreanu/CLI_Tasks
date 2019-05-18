@@ -164,6 +164,11 @@ class App extends Component {
       return;
     }
 
+    if (!this.resources_initialized()) {
+      print("Resources not initialized yet.");
+      return;
+    }
+
     var task = args["_"];
     console.log(task);
     if (task.length === 0) {
@@ -177,9 +182,6 @@ class App extends Component {
         (task[0] === "'" && task[task.length - 1] === "'")) {
       // strip quotes
       task = task.substring(1, task.length - 1);
-    } else {
-      print("Invalid usage. start_task \"<task_name>\"");
-      return;
     }
 
     console.log("start_task called with task " + task);
@@ -187,49 +189,55 @@ class App extends Component {
       .then(response => {
         console.log(response);
         var tasks = response["data"]["get_all_tasks"];
-        if (tasks.includes(task)) {
-          this.setState({
-            "task": task,
-            "current_task_start": Date.now()
-          })
-
-          print("Initializing task.. please wait.");
-
-          axios.post(server_addr + "/initialize_task", {
-              task: this.state["task"],
-              username: this.state["username"]
+        var found = false;
+        for (var i = 0; i < tasks.length; i++) {
+          if (task.toLowerCase() === tasks[i].toLowerCase()) {
+            this.setState({
+              "task": tasks[i],
+              "current_task_start": Date.now()
             })
-            .then(response => {
-              console.log(response);
-              var task_initialized = response["data"]["initialize_task"];
+            found = true;
+            break;
+          }
+        }
 
-              if (task_initialized === "done") {
-                print("Task initialized.");
-                axios.post(server_addr + "/get_task_desc", {
-                    task: task
-                  })
-                  .then(response => {
-                    console.log(response);
-                    print(response["data"]["get_task_desc"]);
-                  })
-                  .catch(function (error) {
-                    print(server_down_msg);
-                  });
-              } else {
-                print("Task could not be initialized");
-                this.setState({
-                  "task": no_task_active
-                })
-              }
-            })
-            .catch(function (error) {
-              print(server_down_msg);
-            });
-
-        } else {
+        if (!found) {
           print("Invalid task name");
           return;
         }
+
+        print("Initializing task.. please wait.");
+
+        axios.post(server_addr + "/initialize_task", {
+            task: this.state["task"],
+            username: this.state["username"]
+          })
+          .then(response => {
+            console.log(response);
+            var task_initialized = response["data"]["initialize_task"];
+
+            if (task_initialized === "done") {
+              print("Task initialized.");
+              axios.post(server_addr + "/get_task_desc", {
+                  task: this.state["task"]
+                })
+                .then(response => {
+                  console.log(response);
+                  print(response["data"]["get_task_desc"]);
+                })
+                .catch(function (error) {
+                  print(server_down_msg);
+                });
+            } else {
+              print("Task could not be initialized");
+              this.setState({
+                "task": no_task_active
+              })
+            }
+          })
+          .catch(function (error) {
+            print(server_down_msg);
+          });
       })
       .catch(function (error) {
         console.log(error);
