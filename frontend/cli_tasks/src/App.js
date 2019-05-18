@@ -4,7 +4,7 @@ import axios from 'axios';
 import Terminal from 'terminal-in-react';
 
 const server_addr = "http://0.0.0.0:8001";
-const server_down_msg = "Server is not up. Please contact the administrator."
+const server_down_msg = "Server is not up or an error occurred. Please contact the administrator."
 const no_topic_active = "none";
 const no_task_active = "none";
 const no_user_active = "guest";
@@ -16,6 +16,7 @@ class App extends Component {
     this.state = {
       username: no_user_active,
       msg: "Welcome to CLI Tasks. Please enter your username, or `help` to show a list of helpful commands.",
+      resources_initialized: false,
       topic: no_topic_active,
       task: no_task_active,
       current_task_start: Date.now()
@@ -38,9 +39,12 @@ class App extends Component {
           axios.post(server_addr + "/initialize_resources", {
               username: this.state["username"]
             })
-            .then(function (response) {
+            .then(response => {
               console.log(response);
               if (response["data"]["initialize_resources"] === "success") {
+                this.setState({
+                  resources_initialized: true
+                });
                 print("Resources initialized.");
               } else {
                 print("Could not initialize resources. Please try again by refreshing the browser.");
@@ -48,6 +52,7 @@ class App extends Component {
             })
             .catch(function (error) {
               print(server_down_msg);
+              console.log(error);
             });
         } else {
           print("Login failed. Try again.")
@@ -331,6 +336,10 @@ class App extends Component {
     return this.state["topic"] !== no_topic_active;
   }
 
+  resources_initialized() {
+    return this.state["resources_initialized"];
+  }
+
   render() {
     var message = this.state["msg"].toString();
     return (
@@ -363,17 +372,7 @@ class App extends Component {
                 this.change_topic(args, print);
               }
             },
-            'ct': {
-              method: (args, print, runCommand) => {
-                this.change_topic(args, print);
-              }
-            },
             'start_task': {
-              method: (args, print, runCommand) => {
-                this.start_task(args, print);
-              }
-            },
-            'st': {
               method: (args, print, runCommand) => {
                 this.start_task(args, print);
               }
@@ -383,17 +382,7 @@ class App extends Component {
                 this.show_current_topic(args, print);
               }
             },
-            'sct': {
-              method: (args, print, runCommand) => {
-                this.show_current_topic(args, print);
-              }
-            },
             'show_score': {
-              method: (args, print, runCommand) => {
-                this.show_score(args, print);
-              }
-            },
-            'ss': {
               method: (args, print, runCommand) => {
                 this.show_score(args, print);
               }
@@ -403,17 +392,7 @@ class App extends Component {
                 this.check(args, print);
               }
             },
-            'c': {
-              method: (args, print, runCommand) => {
-                this.check(args, print);
-              }
-            },
             'check_current_time': {
-              method: (args, print, runCommand) => {
-                this.check_current_time(args, print);
-              }
-            },
-            'cct': {
               method: (args, print, runCommand) => {
                 this.check_current_time(args, print);
               }
@@ -434,7 +413,11 @@ class App extends Component {
               this.login(cmd, print);
             }
             else {
-              this.commandParse(cmd, print);
+              if (this.resources_initialized()) {
+                this.commandParse(cmd, print);
+              } else {
+                print("Resources not initialized yet.");
+              }
             }
           }}
           msg={message}
