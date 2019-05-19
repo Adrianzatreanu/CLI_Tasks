@@ -225,6 +225,36 @@ class DbHandler:
             return row[0]
 
     @staticmethod
+    def get_topic_of_task(task):
+        with sqlite3.connect(PATH_TO_DB) as conn:
+            cursor = conn.cursor()
+            instruction = "select id from tasks where name='{}'".format(task)
+            cursor.execute(instruction)
+            row = cursor.fetchone()
+
+            if row is None:
+                return ""
+
+            task_id = row[0]
+            instruction = "select topic_id from topic_tasks where task_id={}".format(task_id)
+            cursor.execute(instruction)
+            row = cursor.fetchone()
+
+            if row is None:
+                return ""
+
+            topic_id = row[0]
+            instruction = "select name from topics where id={}".format(topic_id)
+            cursor.execute(instruction)
+            row = cursor.fetchone()
+
+            if row is None:
+                return ""
+
+            return row[0]
+
+
+    @staticmethod
     def get_checker_language(task):
         with sqlite3.connect(PATH_TO_DB) as conn:
             cursor = conn.cursor()

@@ -9,6 +9,7 @@ from time import sleep
 from sanitychecker import SanityChecker
 from dbhandler import DbHandler
 from state import State
+from filedownloader import FileDownloader
 
 PATH_TO_SERVER="server/"
 app = Flask(__name__)
@@ -317,14 +318,23 @@ def initialize_task():
     new_env = os.environ
     new_env["VAGRANT_CWD"] = user_dir_path
 
+    topic = DbHandler.get_topic_of_task(task)
     script_name = DbHandler.get_checker_name(task)
 
     if script_name == "":
         json.dumps({"initialize_task": "Could not find task"})
 
-    script_path = "scripts/" + script_name
-    p = subprocess.Popen(["vagrant", "--vm-name=" + username, "upload", script_path, "/scripts/" + script_name], env=new_env, stdout=subprocess.PIPE)
+    # download
+    script_github_path = "scripts/" + topic.lower() + "/" + script_name
+    script_download_destination = PATH_TO_SERVER + "containers/" + username + "/" + script_name
+    FileDownloader.download_file(username, script_github_path, script_download_destination)
+
+    # upload
+    p = subprocess.Popen(["vagrant", "--vm-name=" + username, "upload", script_download_destination, "/scripts/" + script_name], env=new_env, stdout=subprocess.PIPE)
     p.wait()
+
+    # clean
+    p = subprocess.Popen(["rm", script_download_destination], env=new_env, stdout=subprocess.PIPE)
 
     return json.dumps({"initialize_task": "done"})
 

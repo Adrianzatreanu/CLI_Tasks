@@ -295,7 +295,7 @@ class App extends Component {
     }
 
     var time_diff_seconds = (Date.now() - this.state["current_task_start"]) / 1000;
-    print("Time diff in seconds is " + time_diff_seconds);
+    print("Seconds passed: " + time_diff_seconds);
 
     axios.post(server_addr + "/check_task", {
         username: this.state["username"],
