@@ -41,3 +41,8 @@ $ make run_frontend
 
 Then you can just open a browser and go to `http://localhost:3000` and start
 using it!
+
+# Adding new tasks
+Tasks and checkers are in a different repository. Please check out
+https://github.com/Adrianzatreanu/CLI_Tasks_Scripts in order to find out how
+to add a new topic/task.
