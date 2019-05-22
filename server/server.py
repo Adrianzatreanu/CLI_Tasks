@@ -181,20 +181,15 @@ def init_resources(username):
     new_env = os.environ
     new_env["VAGRANT_CWD"] = user_dir_path
 
-    if not destroy_container(new_env, username):
-        return False
+    destroy_container(new_env, username)
 
-    if not create_container(new_env, username):
-        return False
+    create_container(new_env, username)
 
-    if not create_ssh_config(new_env, username, ssh_config_file_path):
-        return False
+    create_ssh_config(new_env, username, ssh_config_file_path)
 
-    if not create_scripts_dir(new_env, username, ssh_config_file_path):
-        return False
+    create_scripts_dir(new_env, username, ssh_config_file_path)
 
-    if not init_state(new_env, username, ssh_config_file_path):
-        return False
+    init_state(new_env, username, ssh_config_file_path)
 
 
     # TODO: fix this
