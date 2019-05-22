@@ -18,8 +18,8 @@ $ python3 -m pip install -r requirements.txt
 Additionally, a vagrant plugin is needed.
 In order to install the plugin, you need `vagrant` installed:
 ```
-$ wget -c https://releases.hashicorp.com/vagrant/2.0.3/vagrant_2.0.3_x86_64.deb
-$ sudo dpkg -i vagrant_2.0.3_x86_64.deb
+$ wget -c https://releases.hashicorp.com/vagrant/2.2.4/vagrant_2.2.4_x86_64.deb
+$ sudo dpkg -i vagrant_2.2.4_x86_64.deb
 ```
 
 and then, in the root of this repo:

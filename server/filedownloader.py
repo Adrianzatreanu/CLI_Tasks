@@ -8,4 +8,3 @@ class FileDownloader:
         print(FileDownloader.REPO_LOCATION + " " + script_location)
         print(script_destination)
         urllib.request.urlretrieve(FileDownloader.REPO_LOCATION + script_location, script_destination)
-        pass
