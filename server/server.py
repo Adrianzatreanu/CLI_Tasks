@@ -191,6 +191,8 @@ def init_resources(username):
 
     init_state(new_env, username, ssh_config_file_path)
 
+    print("Done")
+
 
     # TODO: fix this
     # if not create_chroot(new_env, username, ssh_config_file_path):

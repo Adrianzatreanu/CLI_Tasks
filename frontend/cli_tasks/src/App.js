@@ -51,8 +51,8 @@ class App extends Component {
               }
             })
             .catch(function (error) {
-              print(server_down_msg);
               console.log(error);
+              print(server_down_msg);
             });
         } else {
           print("Login failed. Try again.")
@@ -404,6 +404,22 @@ class App extends Component {
               method: (args, print, runCommand) => {
                 this.check_current_time(args, print);
               }
+            },
+            'echo': {
+              method: (args, print, runCommand) => {
+                var echo_cmd = ["echo"];
+                var cmd = echo_cmd.concat(args["_"]);
+                if (!this.logged_in()) {
+                  this.login(cmd, print);
+                }
+                else {
+                  if (this.resources_initialized()) {
+                    this.commandParse(cmd, print);
+                  } else {
+                    print("Resources not initialized yet.");
+                  }
+                }
+              }
             }
           }}
           descriptions={{
@@ -415,6 +431,7 @@ class App extends Component {
             'show_score': "shows your current score",
             'check': "checks if the current task is complete and updates score if needed",
             'check_current_time': "shows time in seconds since task was started",
+            'echo': 'prints back the message'
           }}
           commandPassThrough={(cmd, print) => {
             if (!this.logged_in()) {
