@@ -109,3 +109,4 @@ node_modules/
 .DS_STORE
 containers/
 .vagrant
+cli_tasks.pem
