@@ -370,7 +370,6 @@ def get_score_for_user():
 
 def change_directory(cmd, username):
     global states
-    print("here" + states[username].get_cwd())
     cmd.append("cd")
     cmd.append(states[username].get_cwd())
     cmd.append(";")
