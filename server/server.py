@@ -5,6 +5,7 @@ import json
 import os
 import subprocess
 from time import sleep
+import shutil
 
 from sanitychecker import SanityChecker
 from dbhandler import DbHandler
@@ -41,6 +42,7 @@ def create_folder_structure(username):
         copyfile(PATH_TO_SERVER + "Vagrantfile", vagrant_file_path)
 
 def destroy_container(env, username):
+    user_dir_path = PATH_TO_SERVER + "containers/" + username
     try:
         p = subprocess.Popen(["vagrant", "--vm-name=" + username, "destroy"], env=env, stdout=subprocess.PIPE)
         p.wait()
@@ -48,6 +50,7 @@ def destroy_container(env, username):
     except Exception as e:
         print("Machine did not exist so it could not be destroyed")
         print(str(e))
+    shutil.rmtree(user_dir_path + "/.vagrant")
     return True
 
 def create_container(env, username):
