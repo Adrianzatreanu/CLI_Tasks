@@ -41,27 +41,11 @@ $ make run_frontend
 
 and a VM provider server, which can be run, using docker:
 ```
-$ docker run --detach --restart always \
-  --name cluster \
-  --volume /opt/cluster/var:/opt/cluster/var \
-  --volume /opt/vmck/var:/opt/vmck/var \
-  --volume /var/run/docker.sock:/var/run/docker.sock:ro \
-  --privileged \
-  --net host \
-  --env NOMAD_CLIENT_INTERFACE=wg0 \
-  --env HOSTNAME=127.0.0.1 \
-  --env SECRET_KEY=foo \
-  mgax/vmck
+docker run --detach --restart always  --name vmck  --volume /opt/vmck/data:/opt/vmck/data  --env HOSTNAME="*"  --env SECRET_KEY=foo  --env CONSUL_URL=http://10.66.60.1:8500  --env NOMAD_URL=http://10.66.60.1:4646  --publish 10.66.60.1:8000:8000  vmck/vmck:resources
 ```
 
-In case this last command fails and `docker logs container` shows that the services
-exited, one possible cause is that you do not have the wg0 interface. To fix this,
-run
-```
-$ ./network.sh
-```
-and replace in the previous command NOMAD_CLIENT_INTERFACE=liquid-bridge.
-
+Additionally, you will need to spin up a nomad + consul cluster running at address 10.66.60.1, which
+can be easily done by following the steps at https://github.com/liquidinvestigations/cluster.
 
 Then you can just open a browser and go to `http://localhost:3000` and start
 using it!
