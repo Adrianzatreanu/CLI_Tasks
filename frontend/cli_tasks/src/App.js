@@ -65,6 +65,7 @@ class App extends Component {
   }
 
   commandParse(cmd, print) {
+    console.log({cmd: cmd, username: this.state["username"]});
     axios.post(server_addr + "/execute", {
         cmd: cmd,
         username: this.state["username"]
