@@ -138,6 +138,9 @@ class DbHandler:
             if row is None:
                 return 0.0
 
+            if row[0] is None:
+                return 0.0
+
             return row[0]
 
     @staticmethod
